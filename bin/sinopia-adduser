@@ -1,0 +1,64 @@
+#!/usr/bin/env node
+
+"use strict";
+
+var fs = require("fs");
+var Path = require("path");
+
+var YAML = require("js-yaml");
+var commander = require("commander");
+
+var Auth = require("sinopia/lib/auth");
+var Config = require("sinopia/lib/config");
+var find_config_file = require("sinopia/lib/config-path");
+var logger = require("sinopia/lib/logger");
+
+function genRandomPassword(len) {
+    len = len || 14;
+    var chars = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789.,;!?/%$*#~&(){}[]<>";
+    var password = "";
+
+    for (var i = 0 ; i < len ; i++) {
+        password += chars[Math.random()*chars.length|0];
+    }
+
+    return password;
+}
+
+// Config
+logger.setup();
+commander
+    .usage("[options] <username>")
+    .option('-c, --config <config.yaml>', 'use this configuration file (default: ./config.yaml)')
+    .parse(process.argv)
+
+var config, config_path;
+try {
+    if (commander.config) {
+        config_path = Path.resolve(commander.config);
+    } else {
+        config_path = find_config_file();
+    }
+    config = YAML.safeLoad(fs.readFileSync(config_path, "utf8"))
+} catch (err) {
+    console.error("An error occured when reading config");
+    process.exit(1)
+}
+if (!config.self_path) {
+    config.self_path = Path.resolve(config_path);
+}
+
+// Add user
+if (commander.args.length != 1) {
+    commander.help();
+}
+
+var auth = Auth(config);
+var username = commander.args[0];
+var password = genRandomPassword();
+
+auth.add_user(username, password, function(){});
+
+console.log("New user created!");
+console.log("  * Username: " + username);
+console.log("  * Password: " + password);
