@@ -1,5 +1,7 @@
 # sinopia-adduser
 
+[![Greenkeeper badge](https://badges.greenkeeper.io/wanadev/sinopia-adduser.svg)](https://greenkeeper.io/)
+
 CLI tool to add sinopia users with random password.
 
 Usage:
